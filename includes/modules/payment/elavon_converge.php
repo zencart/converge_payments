@@ -288,7 +288,7 @@ class elavon_converge extends base {
    * @return array
    */
   function process_button_ajax() {
-    $processButton = array('ccFields'=>array('cc_number'=>$this->code . '_cc_number', 'cc_owner'=>$this->code . '_cc_owner', 'cc_cvv'=>$this->code . '_cc_cvv', 'cc_expires'=>array('name'=>'concatExpiresFields', 'args'=>"[$this->code . '_cc_expires_month',$this->code . '_cc_expires_year']"), 'cc_expires_month'=>$this->code . '_cc_expires_month', 'cc_expires_year'=>$this->code . '_cc_expires_year', 'cc_type' => $this->cc_card_type), 'extraFields'=>array(zen_session_name()=>zen_session_id()));
+    $processButton = array('ccFields'=>array('cc_number'=>$this->code . '_cc_number', 'cc_owner'=>$this->code . '_cc_owner', 'cc_cvv'=>$this->code . '_cc_cvv', 'cc_expires'=>array('name'=>'concatExpiresFields', 'args'=>"['" .$this->code . '_cc_expires_month' . "','" . $this->code . '_cc_expires_year' . "']"), 'cc_expires_month'=>$this->code . '_cc_expires_month', 'cc_expires_year'=>$this->code . '_cc_expires_year', 'cc_type' => $this->cc_card_type), 'extraFields'=>array(zen_session_name()=>zen_session_id()));
         return $processButton;
   }
   /**
