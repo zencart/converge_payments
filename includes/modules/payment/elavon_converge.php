@@ -7,7 +7,7 @@
  * @copyright Copyright 2003-2016 Zen Cart Development Team
  * @copyright Portions Copyright 2003 osCommerce
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
- * @version $Id: Author: DrByte  August 2016 $
+ * @version $Id: Author: DrByte  November 2016 $
  */
 /**
  * Elavon Converge Payment Module
@@ -22,7 +22,7 @@ class elavon_converge extends base {
   /**
    * $moduleVersion is the plugin version number
    */
-  var $moduleVersion = '0.1';
+  var $moduleVersion = '0.2';
 
   /**
    * $title is the displayed name for this payment method
@@ -623,20 +623,22 @@ class elavon_converge extends base {
 
   private function sendRequest($payload)
   {
-    $endpoint = 'https://www.myvirtualmerchant.com/VirtualMerchant/process.do';
-    if (MODULE_PAYMENT_ELAVON_CONVERGE_TESTMODE == 'Sandbox') $endpoint = 'https://demo.myvirtualmerchant.com/VirtualMerchantDemo/process.do';
+    // $endpoint = 'https://www.myvirtualmerchant.com/VirtualMerchant/process.do';
+    // if (MODULE_PAYMENT_ELAVON_CONVERGE_TESTMODE == 'Sandbox') $endpoint = 'https://demo.myvirtualmerchant.com/VirtualMerchantDemo/process.do';
+
+    $endpoint = 'https://api.convergepay.com/VirtualMerchant/process.do';
+    if (MODULE_PAYMENT_ELAVON_CONVERGE_TESTMODE == 'Sandbox') $endpoint = 'https://api.demo.convergepay.com/VirtualMerchantDemo/process.do';
 
     $payload = array_merge($payload, array(
-            'ssl_merchant_id' => MODULE_PAYMENT_ELAVON_CONVERGE_MERCHANTID,
-            'ssl_user_id' => MODULE_PAYMENT_ELAVON_CONVERGE_USERID,
-            'ssl_pin' => MODULE_PAYMENT_ELAVON_CONVERGE_PIN,
+            'ssl_merchant_id' => trim(MODULE_PAYMENT_ELAVON_CONVERGE_MERCHANTID),
+            'ssl_user_id' => trim(MODULE_PAYMENT_ELAVON_CONVERGE_USERID),
+            'ssl_pin' => trim(MODULE_PAYMENT_ELAVON_CONVERGE_PIN),
         ));
 
     $this->_debugActions($payload, 'Submit-Data', '', $endpoint);
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $endpoint . '?' . http_build_query($payload));
-    curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HEADER, false);
     $response = curl_exec($ch);
