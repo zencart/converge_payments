@@ -7,7 +7,7 @@
  * @copyright Copyright 2003-2016 Zen Cart Development Team
  * @copyright Portions Copyright 2003 osCommerce
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
- * @version $Id: Author: DrByte  November 2016 $
+ * @version $Id: Author: DrByte  December 2016 $
  */
 /**
  * Elavon Converge Payment Module
@@ -22,7 +22,7 @@ class elavon_converge extends base {
   /**
    * $moduleVersion is the plugin version number
    */
-  var $moduleVersion = '0.2';
+  var $moduleVersion = '0.3';
 
   /**
    * $title is the displayed name for this payment method
@@ -167,15 +167,6 @@ class elavon_converge extends base {
   function selection() {
     global $order;
 
-    // Payeezy currently only accepts  "American Express", "Visa", "Mastercard", "Discover", "JCB", "Diners Club"
-    $cc_types = array();
-    if (CC_ENABLED_VISA == 1)     $cc_types[] = array('id' => 'Visa', 'text'=> 'Visa');
-    if (CC_ENABLED_MC == 1)       $cc_types[] = array('id' => 'Mastercard', 'text'=> 'Mastercard');
-    if (CC_ENABLED_DISCOVER == 1) $cc_types[] = array('id' => 'Discover', 'text'=> 'Discover');
-    if (CC_ENABLED_AMEX == 1)     $cc_types[] = array('id' => 'American Express', 'text'=> 'American Express');
-    if (CC_ENABLED_JCB == 1)      $cc_types[] = array('id' => 'JCB', 'text'=> 'JCB');
-    if (CC_ENABLED_DINERS_CLUB == 1) $cc_types[] = array('id' => 'Diners Club', 'text'=> 'Diners Club');
-
     // Prepare selection of expiry dates
     for ($i=1; $i<13; $i++) {
       $expires_month[] = array('id' => sprintf('%02d', $i), 'text' => strftime('%B - (%m)',mktime(0,0,0,$i,1,2000)));
@@ -299,7 +290,8 @@ class elavon_converge extends base {
     global $messageStack, $order, $order_totals;
     $order->info['cc_owner'] = strip_tags($_POST['cc_owner']);
     if (!strpos($order->info['cc_number'], 'XX')) {
-      $order->info['cc_number']  = str_pad(substr($_POST['cc_number'], -4), strlen($_POST['cc_number']), "X", STR_PAD_LEFT);
+      $_POST['cc_number'] = preg_replace('/[^0-9]/', '', $_POST['cc_number']);
+      $order->info['cc_number']  = substr($_POST['cc_number'], 0, 6) . str_pad(substr($_POST['cc_number'], -4), strlen($_POST['cc_number'])-10, "X", STR_PAD_LEFT);
     }
     $order->info['cc_expires'] = '';
     $order->info['cc_cvv']     = '***';
@@ -325,7 +317,7 @@ class elavon_converge extends base {
         'ssl_avs_address' => $order->billing['street_address'],
         'ssl_city' => $order->billing['city'],
         'ssl_state' => $order->billing['state'],
-        'ssl_zip' => $order->billing['postcode'],
+        'ssl_avs_zip' => $order->billing['postcode'],
         'ssl_country' => $order->billing['country']['iso_code_3'],
         'ssl_phone' => $order->customer['telephone'],
         'ssl_email' => $order->customer['email_address'],
@@ -333,10 +325,12 @@ class elavon_converge extends base {
         'ssl_ship_to_first_name' => $order->delivery['firstname'],
         'ssl_ship_to_last_name' => $order->delivery['lastname'],
         'ssl_ship_to_address1' => $order->delivery['street_address'],
+        'ssl_ship_to_address2' => $order->delivery['suburb'],
         'ssl_ship_to_city' => $order->delivery['city'],
         'ssl_ship_to_state' => $order->delivery['state'],
         'ssl_ship_to_zip' => $order->delivery['postcode'],
         'ssl_ship_to_country' => $order->delivery['country']['iso_code_3'],
+        'ssl_ship_to_phone' => $order->customer['telephone'],
         'ssl_cardholder_ip' => zen_get_ip_address(),
         'ssl_description' => 'Website Purchase from ' . str_replace('"',"'", STORE_NAME),
     );
@@ -388,7 +382,7 @@ class elavon_converge extends base {
     // SUCCESS
     if ($this->response['ssl_result'] == '0') {
       $order->info['cc_type'] = $this->response['ssl_card_short_description'];
-      $order->info['cc_number'] = $this->response['ssl_card_number'];
+      if (!strpos($order->info['cc_number'], 'X')) $order->info['cc_number'] = $this->response['ssl_card_number'];
       $this->auth_code = $this->response['ssl_approval_code'];
       $this->transaction_id = $this->response['ssl_txn_id'];
       $this->transaction_messages = $this->response['ssl_result_message'] . ' ';
