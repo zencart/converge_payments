@@ -22,7 +22,7 @@ class elavon_converge extends base {
   /**
    * $moduleVersion is the plugin version number
    */
-  var $moduleVersion = '0.3';
+  var $moduleVersion = '0.4';
 
   /**
    * $title is the displayed name for this payment method
@@ -269,7 +269,7 @@ class elavon_converge extends base {
    */
   function process_button() {
     $process_button_string .= zen_draw_hidden_field('cc_number', zen_output_string_protected($_POST[$this->code . '_cc_number']));
-    $process_button_string .= zen_draw_hidden_field('cc_cvv', (int)$_POST[$this->code . '_cc_cvv']);
+    $process_button_string .= zen_draw_hidden_field('cc_cvv', preg_replace('/[^0-9]/', '', $_POST[$this->code . '_cc_cvv']));
     $process_button_string .= zen_draw_hidden_field('cc_expires', sprintf('%02d', (int)$_POST[$this->code . '_cc_expires_month']) . (int)$_POST[$this->code . '_cc_expires_year']);
     $process_button_string .= zen_draw_hidden_field('cc_owner', zen_output_string_protected($_POST[$this->code . '_cc_owner']));
     return $process_button_string;
@@ -299,8 +299,8 @@ class elavon_converge extends base {
     $submit_data = array(
         'ssl_card_number' => preg_replace('/[^0-9]/', '', $_POST['cc_number']),
         'ssl_exp_date' => preg_replace('/[^0-9]/', '', $_POST['cc_expires']), // MMYY format
-        'ssl_cvv2cvc2' => (int)$_POST['cc_cvv'],
-        'ssl_cvv2cvc2_indicator' => '1', // indicates that we are passing a CVV value
+        'ssl_cvv2cvc2' => preg_replace('/[^0-9]/', '', $_POST['cc_cvv']),
+        'ssl_cvv2cvc2_indicator' => !empty($_POST['cc_cvv']), // indicates that we are passing a CVV value
 
         'ssl_amount' => number_format($order->info['total'], 2),
         'ssl_transaction_type' => MODULE_PAYMENT_ELAVON_CONVERGE_AUTHORIZATION_TYPE == 'Authorize' ? 'ccauthonly': 'ccsale',
