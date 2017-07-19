@@ -7,7 +7,7 @@
  * @copyright Copyright 2003-2016 Zen Cart Development Team
  * @copyright Portions Copyright 2003 osCommerce
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
- * @version $Id: Author: DrByte  December 2016 $
+ * @version $Id: Author: DrByte  July 2017 $
  */
 /**
  * Elavon Converge Payment Module
@@ -22,7 +22,7 @@ class elavon_converge extends base {
   /**
    * $moduleVersion is the plugin version number
    */
-  var $moduleVersion = '0.4';
+  var $moduleVersion = '0.5';
 
   /**
    * $title is the displayed name for this payment method
@@ -302,7 +302,7 @@ class elavon_converge extends base {
         'ssl_cvv2cvc2' => preg_replace('/[^0-9]/', '', $_POST['cc_cvv']),
         'ssl_cvv2cvc2_indicator' => !empty($_POST['cc_cvv']), // indicates that we are passing a CVV value
 
-        'ssl_amount' => number_format($order->info['total'], 2),
+        'ssl_amount' => round($order->info['total'], 2),
         'ssl_transaction_type' => MODULE_PAYMENT_ELAVON_CONVERGE_AUTHORIZATION_TYPE == 'Authorize' ? 'ccauthonly': 'ccsale',
         'ssl_invoice_number' => $this->get_next_order_id(),
 
@@ -341,9 +341,9 @@ class elavon_converge extends base {
     if ($order->info['currency'] != $this->gateway_currency) {
       global $currencies;
       $exchange_factor = $currencies->get_value($this->gateway_currency);
-      $submit_data['ssl_amount'] = number_format($order->info['total'] * $exchange_factor, 2);
-      if (isset($submit_data['ssl_salestax'])) $submit_data['ssl_salestax'] = number_format($submit_data['ssl_salestax'] * $exchange_factor, 2);
-      $submit_data['ssl_description'] .= ' (Converted from: ' . number_format($order->info['total'] * $order->info['currency_value'], 2) . ' ' . $order->info['currency'] . ')';
+      $submit_data['ssl_amount'] = round($order->info['total'] * $exchange_factor, 2);
+      if (isset($submit_data['ssl_salestax'])) $submit_data['ssl_salestax'] = round($submit_data['ssl_salestax'] * $exchange_factor, 2);
+      $submit_data['ssl_description'] .= ' (Converted from: ' . round($order->info['total'] * $order->info['currency_value'], 2) . ' ' . $order->info['currency'] . ')';
     }
 
     // Submit the payment to Converge
@@ -483,7 +483,7 @@ class elavon_converge extends base {
     $sql = "insert into " . TABLE_ORDERS_STATUS_HISTORY . " (comments, orders_id, orders_status_id, customer_notified, date_added) values (:orderComments, :orderID, :orderStatus, -1, now() )";
     $currency_comment = '';
     if ($order->info['currency'] != $this->gateway_currency) {
-      $currency_comment = ' (' . number_format($order->info['total'] * $currencies->get_value($this->gateway_currency), 2) . ' ' . $this->gateway_currency . ')';
+      $currency_comment = ' (' . round($order->info['total'] * $currencies->get_value($this->gateway_currency), 2) . ' ' . $this->gateway_currency . ')';
     }
     $sql = $db->bindVars($sql, ':orderComments', 'Credit Card payment.  AUTH: ' . $this->auth_code . ' TransID: ' . $this->transaction_id . ' ' . $currency_comment . "\n" . $this->transaction_messages, 'string');
     $sql = $db->bindVars($sql, ':orderID', $insert_id, 'integer');
